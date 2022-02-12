@@ -1,6 +1,7 @@
 package omnitrack_test
 
 import (
+	"io"
 	"strings"
 	"testing"
 
@@ -17,7 +18,7 @@ func TestNewDispatcher(t *testing.T) {
 
 type dummy struct{}
 
-func (d *dummy) Handshake() error {
+func (d *dummy) Handshake(r io.Reader) error {
 	return nil
 }
 
@@ -31,12 +32,17 @@ func TestNewDispatcherWithDriver(t *testing.T) {
 	}
 }
 
-func TestDispatchWithErr(t *testing.T) {
+func TestDispatchWithNoProviderAvailable(t *testing.T) {
 	d := omnitrack.NewDispatcher()
 
 	reader := strings.NewReader("abcd")
 
-	if err := d.Dispatch(reader); err == nil {
+	_, err := d.Dispatch(reader)
+	if err == nil {
 		t.Fatal("should have returned an error")
+	} else {
+		if _, ok := err.(omnitrack.NoProviderError); !ok {
+			t.Fatal("should have returned an error")
+		}
 	}
 }
