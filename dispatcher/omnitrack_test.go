@@ -1,15 +1,15 @@
-package omnitrack_test
+package dispatcher_test
 
 import (
 	"io"
 	"strings"
 	"testing"
 
-	"github.com/edsonmichaque/omnitrack"
+	"github.com/edsonmichaque/omnitrack/dispatcher"
 )
 
-func TestNewDispatcher(t *testing.T) {
-	d := omnitrack.NewDispatcher()
+func TestNew(t *testing.T) {
+	d := dispatcher.New()
 
 	if d == nil {
 		t.Fatal("dispatcher should not be not")
@@ -26,9 +26,9 @@ func (d *dummyProvider) Handle() error {
 	return nil
 }
 
-func TestNewDispatcherWithDriver(t *testing.T) {
-	d := omnitrack.NewDispatcher(
-		omnitrack.WithProvider(&dummyProvider{}),
+func TestNewWithDriver(t *testing.T) {
+	d := dispatcher.New(
+		dispatcher.WithProvider(&dummyProvider{}),
 	)
 
 	if d == nil {
@@ -37,7 +37,7 @@ func TestNewDispatcherWithDriver(t *testing.T) {
 }
 
 func TestDispatchWithNoProviderAvailable(t *testing.T) {
-	d := omnitrack.NewDispatcher()
+	d := dispatcher.New()
 
 	reader := strings.NewReader("abcd")
 
@@ -45,15 +45,15 @@ func TestDispatchWithNoProviderAvailable(t *testing.T) {
 	if err == nil {
 		t.Fatal("should have returned an error")
 	} else {
-		if _, ok := err.(omnitrack.NoProviderError); !ok {
+		if _, ok := err.(dispatcher.NoProviderError); !ok {
 			t.Fatal("should have returned an error")
 		}
 	}
 }
 
 func TestDispatch_WithDummyProvider(t *testing.T) {
-	d := omnitrack.NewDispatcher(
-		omnitrack.WithProvider(&dummyProvider{}),
+	d := dispatcher.New(
+		dispatcher.WithProvider(&dummyProvider{}),
 	)
 
 	reader := strings.NewReader("abcd")
@@ -82,8 +82,8 @@ func (d *dummyConn) Close() error {
 }
 
 func TestHandle_WithDummyProvider(t *testing.T) {
-	d := omnitrack.NewDispatcher(
-		omnitrack.WithProvider(&dummyProvider{}),
+	d := dispatcher.New(
+		dispatcher.WithProvider(&dummyProvider{}),
 	)
 
 	conn := &dummyConn{}
