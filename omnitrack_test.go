@@ -46,3 +46,19 @@ func TestDispatchWithNoProviderAvailable(t *testing.T) {
 		}
 	}
 }
+
+func TestDispatch_WithDummyProvider(t *testing.T) {
+	d := omnitrack.NewDispatcher(
+		omnitrack.WithProvider(&dummyProvider{}),
+	)
+
+	reader := strings.NewReader("abcd")
+
+	if provider, err := d.Dispatch(reader); err != nil {
+		t.Fatal("shouldn't have returned an error")
+	} else {
+		if provider == nil {
+			t.Fatal("provider shouldn't be nil")
+		}
+	}
+}
