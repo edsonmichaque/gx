@@ -1,18 +1,10 @@
 package dispatcher
 
-type NoProviderError struct {
+type MissingProviderError struct {
 	err error
 }
 
-func (e NoProviderError) Error() string {
-	return e.err.Error()
-}
-
-type ConnectionClosedError struct {
-	err error
-}
-
-func (e ConnectionClosedError) Error() string {
+func (e MissingProviderError) Error() string {
 	return e.err.Error()
 }
 

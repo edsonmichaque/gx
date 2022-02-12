@@ -3,7 +3,7 @@ package dispatcher
 import (
 	"io"
 
-	"github.com/edsonmichaque/omnitrack/provider"
+	"github.com/edsonmichaque/omni/provider"
 )
 
 type Dispatcher struct {
@@ -35,7 +35,7 @@ func (d *Dispatcher) dispatch(r io.Reader) (provider.Provider, error) {
 		}
 	}
 
-	return nil, NoProviderError{}
+	return nil, MissingProviderError{}
 }
 
 func WithProvider(p provider.Provider) Option {

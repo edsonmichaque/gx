@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edsonmichaque/omnitrack/dispatcher"
+	"github.com/edsonmichaque/omni/dispatcher"
 )
 
 func TestNew(t *testing.T) {
@@ -45,7 +45,7 @@ func TestDispatchWithNoProviderAvailable(t *testing.T) {
 	if err == nil {
 		t.Fatal("should have returned an error")
 	} else {
-		if _, ok := err.(dispatcher.NoProviderError); !ok {
+		if _, ok := err.(dispatcher.MissingProviderError); !ok {
 			t.Fatal("should have returned an error")
 		}
 	}
