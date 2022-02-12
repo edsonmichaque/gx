@@ -16,15 +16,15 @@ func TestNewDispatcher(t *testing.T) {
 	}
 }
 
-type dummy struct{}
+type dummyProvider struct{}
 
-func (d *dummy) Handshake(r io.Reader) error {
+func (d *dummyProvider) Handshake(r io.Reader) error {
 	return nil
 }
 
 func TestNewDispatcherWithDriver(t *testing.T) {
 	d := omnitrack.NewDispatcher(
-		omnitrack.WithProvider(&dummy{}),
+		omnitrack.WithProvider(&dummyProvider{}),
 	)
 
 	if d == nil {
