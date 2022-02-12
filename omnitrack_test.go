@@ -22,6 +22,10 @@ func (d *dummyProvider) Handshake(r io.Reader) error {
 	return nil
 }
 
+func (d *dummyProvider) Handle() error {
+	return nil
+}
+
 func TestNewDispatcherWithDriver(t *testing.T) {
 	d := omnitrack.NewDispatcher(
 		omnitrack.WithProvider(&dummyProvider{}),
@@ -61,4 +65,31 @@ func TestDispatch_WithDummyProvider(t *testing.T) {
 			t.Fatal("provider shouldn't be nil")
 		}
 	}
+}
+
+type dummyConn struct{}
+
+func (d *dummyConn) Read(b []byte) (int, error) {
+	return 0, nil
+}
+
+func (d *dummyConn) Write(b []byte) (int, error) {
+	return 0, nil
+}
+
+func (d *dummyConn) Close() error {
+	return nil
+}
+
+func TestHandle_WithDummyProvider(t *testing.T) {
+	d := omnitrack.NewDispatcher(
+		omnitrack.WithProvider(&dummyProvider{}),
+	)
+
+	conn := &dummyConn{}
+
+	if err := d.Handle(conn); err != nil {
+		t.Fatal("should not have returned error")
+	}
+
 }

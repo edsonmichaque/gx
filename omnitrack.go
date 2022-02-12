@@ -30,7 +30,11 @@ func (e NoProviderError) Error() string {
 	return e.err.Error()
 }
 
-func (d Dispatcher) Dispatch(r io.Reader) (Provider, error) {
+func (d *Dispatcher) Dispatch(r io.Reader) (Provider, error) {
+	return d.dispatch(r)
+}
+
+func (d *Dispatcher) dispatch(r io.Reader) (Provider, error) {
 	for _, provider := range d.providers {
 		if err := provider.Handshake(r); err == nil {
 			return provider, nil
@@ -42,6 +46,7 @@ func (d Dispatcher) Dispatch(r io.Reader) (Provider, error) {
 
 type Provider interface {
 	Handshake(io.Reader) error
+	Handle() error
 }
 
 func WithProvider(p Provider) DispatcherOption {
@@ -52,4 +57,21 @@ func WithProvider(p Provider) DispatcherOption {
 
 		d.providers = append(d.providers, p)
 	}
+}
+
+func (d *Dispatcher) Handle(r io.ReadWriteCloser) error {
+	return d.handle(r)
+}
+
+func (d *Dispatcher) handle(r io.ReadWriteCloser) error {
+	provider, err := d.Dispatch(r)
+	if err != nil {
+		return err
+	}
+
+	if err := provider.Handle(); err != nil {
+		return err
+	}
+
+	return nil
 }
