@@ -7,13 +7,13 @@ import (
 	"os"
 	"sync"
 
-	"github.com/edsonmichaque/omni"
 	"github.com/edsonmichaque/omni/dispatcher"
+	"github.com/edsonmichaque/omni/libomni"
 	"github.com/edsonmichaque/omni/registry"
 )
 
 type TCPServer struct {
-	Providers map[string]omni.Omni
+	Providers map[string]libomni.Omni
 	Port      string
 }
 

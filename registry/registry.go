@@ -1,20 +1,20 @@
 package registry
 
 import (
-	"github.com/edsonmichaque/omni"
+	"github.com/edsonmichaque/omni/libomni"
 	"github.com/edsonmichaque/omni/providers/tcp/dummy"
 	"github.com/edsonmichaque/omni/providers/tcp/dummy2"
 )
 
-func TCPProviders() map[string]omni.Omni {
-	return map[string]omni.Omni{
+func TCPProviders() map[string]libomni.Omni {
+	return map[string]libomni.Omni{
 		"dummy":  dummy.Provider{},
 		"dummy2": dummy2.Dummy2{},
 	}
 }
 
-func UDPProviders() map[string]omni.Omni {
-	return map[string]omni.Omni{
+func UDPProviders() map[string]libomni.Omni {
+	return map[string]libomni.Omni{
 		"dummy":  dummy.Provider{},
 		"dummy2": dummy2.Dummy2{},
 	}

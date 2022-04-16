@@ -3,11 +3,11 @@ package dummy
 import (
 	"errors"
 
-	"github.com/edsonmichaque/omni"
+	"github.com/edsonmichaque/omni/libomni"
 )
 
 type closer struct{}
 
-func (d closer) Close(omni.Session) (*bool, error) {
+func (d closer) Close(libomni.Session) (*bool, error) {
 	return nil, errors.New("not implemented")
 }

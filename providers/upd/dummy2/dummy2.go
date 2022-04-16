@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/edsonmichaque/omni"
+	"github.com/edsonmichaque/omni/libomni"
 )
 
 type Dummy2 struct{}
@@ -22,17 +22,17 @@ func (d Dummy2) Admit(sessionId string, b []byte) bool {
 	return admit
 }
 
-func (d Dummy2) Decode(sessionId string, b []byte) (*omni.Signal, error) {
+func (d Dummy2) Decode(sessionId string, b []byte) (*libomni.Signal, error) {
 	if strings.ToUpper(strings.TrimSpace(string(b))) == "POSITION UPDATE" {
-		return &omni.Signal{
-			PositionUpdate: &omni.PositionUpdate{},
+		return &libomni.Signal{
+			PositionUpdate: &libomni.PositionUpdate{},
 		}, nil
 	}
 
 	return nil, errors.New("unknow signal")
 }
 
-func (d Dummy2) Encode(sessionId string, in omni.EncodeInput) ([]byte, error) {
+func (d Dummy2) Encode(sessionId string, in libomni.EncodeInput) ([]byte, error) {
 	if in.AuthorizationResponse != nil {
 		return []byte("authorized\n"), nil
 	}
@@ -48,6 +48,6 @@ func (d Dummy2) Encode(sessionId string, in omni.EncodeInput) ([]byte, error) {
 	return nil, errors.New("unknown command")
 }
 
-func (d Dummy2) Authorize(string, omni.Device, map[string]string) (bool, error) {
+func (d Dummy2) Authorize(string, libomni.Device, map[string]string) (bool, error) {
 	return true, nil
 }

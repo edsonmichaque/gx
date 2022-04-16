@@ -1,4 +1,4 @@
-package omni
+package libomni
 
 type Omni interface {
 	Admiter

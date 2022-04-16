@@ -4,20 +4,20 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/edsonmichaque/omni"
+	"github.com/edsonmichaque/omni/libomni"
 )
 
 type codec struct{}
 
-func (d codec) Decode(session omni.Session, b []byte) (*omni.Signal, error) {
+func (d codec) Decode(session libomni.Session, b []byte) (*libomni.Signal, error) {
 	if strings.ToUpper(strings.TrimSpace(string(b))) == "POSITION UPDATE" {
-		return &omni.Signal{PositionUpdate: &omni.PositionUpdate{}}, nil
+		return &libomni.Signal{PositionUpdate: &libomni.PositionUpdate{}}, nil
 	}
 
 	return nil, errors.New("unknow signal")
 }
 
-func (d codec) Encode(session omni.Session, in omni.EncodeInput) ([]byte, error) {
+func (d codec) Encode(session libomni.Session, in libomni.EncodeInput) ([]byte, error) {
 	if in.AuthorizationResponse != nil {
 		return []byte("authorized\n"), nil
 	}

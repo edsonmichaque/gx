@@ -5,12 +5,12 @@ import (
 	"log"
 	"strings"
 
-	"github.com/edsonmichaque/omni"
+	"github.com/edsonmichaque/omni/libomni"
 )
 
 type Dummy2 struct{}
 
-func (d Dummy2) Admit(session omni.Session, b []byte) bool {
+func (d Dummy2) Admit(session libomni.Session, b []byte) bool {
 	log.Println(session.ID, "found:", string(b))
 	toUpper := strings.ToUpper(string(b))
 	log.Println(session.ID, "toUpper:", toUpper)
@@ -22,17 +22,17 @@ func (d Dummy2) Admit(session omni.Session, b []byte) bool {
 	return admit
 }
 
-func (d Dummy2) Decode(session omni.Session, b []byte) (*omni.Signal, error) {
+func (d Dummy2) Decode(session libomni.Session, b []byte) (*libomni.Signal, error) {
 	if strings.ToUpper(strings.TrimSpace(string(b))) == "POSITION UPDATE" {
-		return &omni.Signal{
-			PositionUpdate: &omni.PositionUpdate{},
+		return &libomni.Signal{
+			PositionUpdate: &libomni.PositionUpdate{},
 		}, nil
 	}
 
 	return nil, errors.New("unknow signal")
 }
 
-func (d Dummy2) Encode(session omni.Session, in omni.EncodeInput) ([]byte, error) {
+func (d Dummy2) Encode(session libomni.Session, in libomni.EncodeInput) ([]byte, error) {
 	if in.AuthorizationResponse != nil {
 		return []byte("authorized\n"), nil
 	}
@@ -48,6 +48,6 @@ func (d Dummy2) Encode(session omni.Session, in omni.EncodeInput) ([]byte, error
 	return nil, errors.New("unknown command")
 }
 
-func (d Dummy2) Authorize(omni.Session, omni.Device, map[string]string) (bool, error) {
+func (d Dummy2) Authorize(libomni.Session, libomni.Device, map[string]string) (bool, error) {
 	return true, nil
 }

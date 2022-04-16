@@ -9,13 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edsonmichaque/omni"
+	"github.com/edsonmichaque/omni/libomni"
 	"github.com/google/uuid"
 )
 
 type Queue interface {
-	Send(omni.Session, interface{}) error
-	Get(omni.Session) (*omni.EncodeInput, error)
+	Send(libomni.Session, interface{}) error
+	Get(libomni.Session) (*libomni.EncodeInput, error)
 }
 
 type Logger interface {
@@ -27,8 +27,8 @@ type Logger interface {
 
 type Dispatcher struct {
 	rw        io.ReadWriter
-	providers map[string]omni.Omni
-	current   omni.Omni
+	providers map[string]libomni.Omni
+	current   libomni.Omni
 	queue     Queue
 	logger    Logger
 }
@@ -36,7 +36,7 @@ type Dispatcher struct {
 func (d Dispatcher) Dispatch() {
 	sessionId := uuid.NewString()
 
-	session := omni.Session{
+	session := libomni.Session{
 		ID: sessionId,
 	}
 
@@ -98,7 +98,7 @@ func (d Dispatcher) write(bytes []byte) (int, error) {
 	return d.rw.Write(bytes)
 }
 
-func (d Dispatcher) processSignals(session omni.Session) error {
+func (d Dispatcher) processSignals(session libomni.Session) error {
 	inputBytes, err := bufio.NewReader(d.rw).ReadBytes('\n')
 	if err != nil {
 		if err == io.EOF {
@@ -129,12 +129,12 @@ func (d Dispatcher) processSignals(session omni.Session) error {
 
 		var rawBytes []byte
 		if err := d.queue.Send(session, signal.PositionUpdate); err != nil {
-			rawBytes, err = d.current.Encode(session, omni.EncodeInput{PositionUpdateResponse: &omni.PositionUpdateResponse{}})
+			rawBytes, err = d.current.Encode(session, libomni.EncodeInput{PositionUpdateResponse: &libomni.PositionUpdateResponse{}})
 			if err != nil {
 				return err
 			}
 		} else {
-			rawBytes, err = d.current.Encode(session, omni.EncodeInput{PositionUpdateResponse: &omni.PositionUpdateResponse{}})
+			rawBytes, err = d.current.Encode(session, libomni.EncodeInput{PositionUpdateResponse: &libomni.PositionUpdateResponse{}})
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ func (d Dispatcher) processSignals(session omni.Session) error {
 	return errors.New("")
 }
 
-func (d Dispatcher) processCommands(session omni.Session) error {
+func (d Dispatcher) processCommands(session libomni.Session) error {
 	cmd, err := d.queue.Get(session)
 	if err != nil {
 		return err
@@ -170,7 +170,7 @@ func (d Dispatcher) processCommands(session omni.Session) error {
 	return nil
 }
 
-func authorize(session omni.Session, provider omni.Omni, d omni.Device, req omni.AuthorizationRequest) ([]byte, error) {
+func authorize(session libomni.Session, provider libomni.Omni, d libomni.Device, req libomni.AuthorizationRequest) ([]byte, error) {
 	authz, err := provider.Authorize(session, d, req.Credentials)
 	if err != nil {
 		return nil, err
@@ -178,12 +178,12 @@ func authorize(session omni.Session, provider omni.Omni, d omni.Device, req omni
 
 	var rawBytes []byte
 	if authz {
-		rawBytes, err = provider.Encode(session, omni.EncodeInput{AuthorizationResponse: &omni.AuthorizationResponse{}})
+		rawBytes, err = provider.Encode(session, libomni.EncodeInput{AuthorizationResponse: &libomni.AuthorizationResponse{}})
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		rawBytes, err = provider.Encode(session, omni.EncodeInput{AuthorizationResponse: &omni.AuthorizationResponse{}})
+		rawBytes, err = provider.Encode(session, libomni.EncodeInput{AuthorizationResponse: &libomni.AuthorizationResponse{}})
 		if err != nil {
 			return nil, err
 		}
@@ -214,29 +214,29 @@ func (l logger) Warnf(args ...interface{}) {
 
 type queue struct{}
 
-func (q queue) Send(_ omni.Session, data interface{}) error {
+func (q queue) Send(_ libomni.Session, data interface{}) error {
 	return nil
 }
 
 var ErrEmptyQueue = errors.New("empty queue")
 
-func (q queue) Get(session omni.Session) (*omni.EncodeInput, error) {
+func (q queue) Get(session libomni.Session) (*libomni.EncodeInput, error) {
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if cmd := r.Intn(3); cmd == 0 {
 		log.Println(session.ID, "Authorization command")
-		return &omni.EncodeInput{AuthorizationResponse: &omni.AuthorizationResponse{}}, nil
+		return &libomni.EncodeInput{AuthorizationResponse: &libomni.AuthorizationResponse{}}, nil
 	} else if cmd == 1 {
 		log.Println(session.ID, "Ignite command")
-		return &omni.EncodeInput{Ignite: &omni.Ignite{}}, nil
+		return &libomni.EncodeInput{Ignite: &libomni.Ignite{}}, nil
 	} else {
 		log.Println(session.ID, "Nothing to send")
 		return nil, ErrEmptyQueue
 	}
 }
 
-func New(rw io.ReadWriter, providers map[string]omni.Omni) Dispatcher {
+func New(rw io.ReadWriter, providers map[string]libomni.Omni) Dispatcher {
 	return Dispatcher{
 		rw:        rw,
 		providers: providers,
