@@ -1,4 +1,4 @@
-package dispatcher
+package omni
 
 type MissingProviderError struct {
 	err error
