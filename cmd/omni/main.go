@@ -9,7 +9,7 @@ import (
 
 	"github.com/edsonmichaque/omni/dispatcher"
 	"github.com/edsonmichaque/omni/libomni"
-	"github.com/edsonmichaque/omni/registry"
+	"github.com/edsonmichaque/omni/libomni/registry"
 )
 
 type TCPServer struct {

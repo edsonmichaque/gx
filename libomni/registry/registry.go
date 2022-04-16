@@ -2,8 +2,8 @@ package registry
 
 import (
 	"github.com/edsonmichaque/omni/libomni"
-	"github.com/edsonmichaque/omni/providers/tcp/dummy"
-	"github.com/edsonmichaque/omni/providers/tcp/dummy2"
+	"github.com/edsonmichaque/omni/libomni/providers/tcp/dummy"
+	"github.com/edsonmichaque/omni/libomni/providers/tcp/dummy2"
 )
 
 func TCPProviders() map[string]libomni.Omni {
