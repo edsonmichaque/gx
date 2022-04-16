@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/edsonmichaque/omni"
+	"github.com/edsonmichaque/omni/dispatcher"
 	"github.com/edsonmichaque/omni/registry"
 )
 
@@ -38,7 +39,7 @@ func (s Server) ServeTCP() error {
 
 		log.Println("accepting a new request")
 
-		dispatcher := omni.New(c, registry.TCPProviders())
+		dispatcher := dispatcher.New(c, registry.TCPProviders())
 
 		log.Println("dispatching a new request")
 		go dispatcher.Dispatch()

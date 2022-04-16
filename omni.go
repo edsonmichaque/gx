@@ -6,6 +6,10 @@ type Omni interface {
 	Autorizer
 }
 
+type Session struct {
+	ID string
+}
+
 type Admiter interface {
 	Admit(Session, []byte) bool
 }

@@ -1,4 +1,4 @@
-package omni
+package dispatcher
 
 import (
 	"bufio"
@@ -9,12 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/edsonmichaque/omni"
 	"github.com/google/uuid"
 )
 
 type Queue interface {
-	Send(Session, interface{}) error
-	Get(Session) (*EncodeInput, error)
+	Send(omni.Session, interface{}) error
+	Get(omni.Session) (*omni.EncodeInput, error)
 }
 
 type Logger interface {
@@ -26,8 +27,8 @@ type Logger interface {
 
 type Dispatcher struct {
 	rw        io.ReadWriter
-	providers map[string]Omni
-	current   Omni
+	providers map[string]omni.Omni
+	current   omni.Omni
 	queue     Queue
 	logger    Logger
 }
@@ -35,7 +36,7 @@ type Dispatcher struct {
 func (d Dispatcher) Dispatch() {
 	sessionId := uuid.NewString()
 
-	session := Session{
+	session := omni.Session{
 		ID: sessionId,
 	}
 
@@ -97,7 +98,7 @@ func (d Dispatcher) write(bytes []byte) (int, error) {
 	return d.rw.Write(bytes)
 }
 
-func (d Dispatcher) processSignals(session Session) error {
+func (d Dispatcher) processSignals(session omni.Session) error {
 	inputBytes, err := bufio.NewReader(d.rw).ReadBytes('\n')
 	if err != nil {
 		if err == io.EOF {
@@ -128,12 +129,12 @@ func (d Dispatcher) processSignals(session Session) error {
 
 		var rawBytes []byte
 		if err := d.queue.Send(session, signal.PositionUpdate); err != nil {
-			rawBytes, err = d.current.Encode(session, EncodeInput{PositionUpdateResponse: &PositionUpdateResponse{}})
+			rawBytes, err = d.current.Encode(session, omni.EncodeInput{PositionUpdateResponse: &omni.PositionUpdateResponse{}})
 			if err != nil {
 				return err
 			}
 		} else {
-			rawBytes, err = d.current.Encode(session, EncodeInput{PositionUpdateResponse: &PositionUpdateResponse{}})
+			rawBytes, err = d.current.Encode(session, omni.EncodeInput{PositionUpdateResponse: &omni.PositionUpdateResponse{}})
 			if err != nil {
 				return err
 			}
@@ -151,7 +152,7 @@ func (d Dispatcher) processSignals(session Session) error {
 	return errors.New("")
 }
 
-func (d Dispatcher) processCommands(session Session) error {
+func (d Dispatcher) processCommands(session omni.Session) error {
 	cmd, err := d.queue.Get(session)
 	if err != nil {
 		return err
@@ -169,7 +170,7 @@ func (d Dispatcher) processCommands(session Session) error {
 	return nil
 }
 
-func authorize(session Session, provider Omni, d Device, req AuthorizationRequest) ([]byte, error) {
+func authorize(session omni.Session, provider omni.Omni, d omni.Device, req omni.AuthorizationRequest) ([]byte, error) {
 	authz, err := provider.Authorize(session, d, req.Credentials)
 	if err != nil {
 		return nil, err
@@ -177,12 +178,12 @@ func authorize(session Session, provider Omni, d Device, req AuthorizationReques
 
 	var rawBytes []byte
 	if authz {
-		rawBytes, err = provider.Encode(session, EncodeInput{AuthorizationResponse: &AuthorizationResponse{}})
+		rawBytes, err = provider.Encode(session, omni.EncodeInput{AuthorizationResponse: &omni.AuthorizationResponse{}})
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		rawBytes, err = provider.Encode(session, EncodeInput{AuthorizationResponse: &AuthorizationResponse{}})
+		rawBytes, err = provider.Encode(session, omni.EncodeInput{AuthorizationResponse: &omni.AuthorizationResponse{}})
 		if err != nil {
 			return nil, err
 		}
@@ -192,15 +193,6 @@ func authorize(session Session, provider Omni, d Device, req AuthorizationReques
 }
 
 type Option func(*Dispatcher)
-
-func New(rw io.ReadWriter, providers map[string]Omni) Dispatcher {
-	return Dispatcher{
-		rw:        rw,
-		providers: providers,
-		logger:    &logger{},
-		queue:     &queue{},
-	}
-}
 
 type logger struct{}
 
@@ -222,28 +214,33 @@ func (l logger) Warnf(args ...interface{}) {
 
 type queue struct{}
 
-func (q queue) Send(_ Session, data interface{}) error {
+func (q queue) Send(_ omni.Session, data interface{}) error {
 	return nil
 }
 
 var ErrEmptyQueue = errors.New("empty queue")
 
-func (q queue) Get(session Session) (*EncodeInput, error) {
+func (q queue) Get(session omni.Session) (*omni.EncodeInput, error) {
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if cmd := r.Intn(3); cmd == 0 {
 		log.Println(session.ID, "Authorization command")
-		return &EncodeInput{AuthorizationResponse: &AuthorizationResponse{}}, nil
+		return &omni.EncodeInput{AuthorizationResponse: &omni.AuthorizationResponse{}}, nil
 	} else if cmd == 1 {
 		log.Println(session.ID, "Ignite command")
-		return &EncodeInput{Ignite: &Ignite{}}, nil
+		return &omni.EncodeInput{Ignite: &omni.Ignite{}}, nil
 	} else {
 		log.Println(session.ID, "Nothing to send")
 		return nil, ErrEmptyQueue
 	}
 }
 
-type Session struct {
-	ID string
+func New(rw io.ReadWriter, providers map[string]omni.Omni) Dispatcher {
+	return Dispatcher{
+		rw:        rw,
+		providers: providers,
+		logger:    &logger{},
+		queue:     &queue{},
+	}
 }

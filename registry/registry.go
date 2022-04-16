@@ -8,14 +8,14 @@ import (
 
 func TCPProviders() map[string]omni.Omni {
 	return map[string]omni.Omni{
-		"dummy":  dummy.Dummy{},
+		"dummy":  dummy.Provider{},
 		"dummy2": dummy2.Dummy2{},
 	}
 }
 
 func UDPProviders() map[string]omni.Omni {
 	return map[string]omni.Omni{
-		"dummy":  dummy.Dummy{},
+		"dummy":  dummy.Provider{},
 		"dummy2": dummy2.Dummy2{},
 	}
 }
