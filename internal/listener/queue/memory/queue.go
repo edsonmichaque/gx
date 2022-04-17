@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/edsonmichaque/omni/internal/queue"
-	"github.com/edsonmichaque/omni/libomni"
+	"github.com/edsonmichaque/libomni"
+	"github.com/edsonmichaque/omni/internal/listener/queue"
 )
 
 func (q Queue) Get(session libomni.Session) (*libomni.EncodeInput, error) {

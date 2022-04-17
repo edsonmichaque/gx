@@ -8,11 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/edsonmichaque/omni/internal/logger"
-	"github.com/edsonmichaque/omni/internal/logger/stdlib"
-	"github.com/edsonmichaque/omni/internal/queue"
-	"github.com/edsonmichaque/omni/internal/queue/memory"
-	"github.com/edsonmichaque/omni/libomni"
+	"github.com/edsonmichaque/libomni"
+	"github.com/edsonmichaque/omni/internal/listener/logger"
+	"github.com/edsonmichaque/omni/internal/listener/logger/stdlib"
+	"github.com/edsonmichaque/omni/internal/listener/queue"
+	"github.com/edsonmichaque/omni/internal/listener/queue/memory"
 )
 
 type connectionState uint

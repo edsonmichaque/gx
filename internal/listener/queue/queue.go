@@ -3,7 +3,7 @@ package queue
 import (
 	"errors"
 
-	"github.com/edsonmichaque/omni/libomni"
+	"github.com/edsonmichaque/libomni"
 )
 
 type Queue interface {

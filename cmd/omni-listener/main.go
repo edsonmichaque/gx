@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edsonmichaque/omni/internal/dispatcher"
-	"github.com/edsonmichaque/omni/libomni"
-	"github.com/edsonmichaque/omni/libomni/registry"
+	"github.com/edsonmichaque/libomni"
+	"github.com/edsonmichaque/libomni/registry"
+	"github.com/edsonmichaque/omni/internal/listener/dispatcher"
 	"github.com/google/uuid"
 )
 
