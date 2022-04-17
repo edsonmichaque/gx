@@ -2,14 +2,17 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/edsonmichaque/omni/internal/dispatcher"
 	"github.com/edsonmichaque/omni/libomni"
 	"github.com/edsonmichaque/omni/libomni/registry"
+	"github.com/google/uuid"
 )
 
 type TCPServer struct {
@@ -31,18 +34,39 @@ func (s Server) ServeTCP() error {
 	defer l.Close()
 
 	for {
+		session := libomni.Session{
+			ID:        uuid.NewString(),
+			Timestamp: time.Now(),
+		}
+
 		c, err := l.Accept()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(session.ID, err)
 			continue
 		}
 
-		log.Println("accepting a new request")
+		log.Println(session.ID, "accepting a new request")
 
 		dispatcher := dispatcher.New(c, registry.TCPProviders())
 
-		log.Println("dispatching a new request")
-		go dispatcher.Dispatch()
+		log.Println(session.ID, "dispatching a new request")
+
+		go func() {
+			defer close(session, c)
+
+			if err := dispatcher.Dispatch(session); err != nil {
+				log.Println(session.ID, "aborting request due to error", err)
+			}
+		}()
+	}
+}
+
+func close(session libomni.Session, c io.Closer) {
+	log.Println(session.ID, "closing the connection")
+	log.Println(session.ID, "session duration", time.Since(session.Timestamp))
+
+	if err := c.Close(); err != nil {
+		log.Println(session.ID, "could not close the connection")
 	}
 }
 

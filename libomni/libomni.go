@@ -1,5 +1,7 @@
 package libomni
 
+import "time"
+
 type Omni interface {
 	Admiter
 	Codec
@@ -7,7 +9,8 @@ type Omni interface {
 }
 
 type Session struct {
-	ID string
+	ID        string
+	Timestamp time.Time
 }
 
 type Admiter interface {

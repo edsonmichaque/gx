@@ -4,90 +4,114 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
-	"math/rand"
 	"sync"
+	"syscall"
 	"time"
 
+	"github.com/edsonmichaque/omni/internal/logger"
+	"github.com/edsonmichaque/omni/internal/logger/stdlib"
+	"github.com/edsonmichaque/omni/internal/queue"
+	"github.com/edsonmichaque/omni/internal/queue/memory"
 	"github.com/edsonmichaque/omni/libomni"
-	"github.com/google/uuid"
 )
 
-type Queue interface {
-	Send(libomni.Session, interface{}) error
-	Get(libomni.Session) (*libomni.EncodeInput, error)
-}
+type connectionState uint
 
-type Logger interface {
-	Debug(...interface{})
-	Debugf(...interface{})
-	Warn(...interface{})
-	Warnf(...interface{})
-}
+const (
+	connectionOpen   = iota
+	connectionClosed = iota
+)
 
 type Dispatcher struct {
+	state     connectionState
 	rw        io.ReadWriter
 	providers map[string]libomni.Omni
 	current   libomni.Omni
-	queue     Queue
-	logger    Logger
+	queue     queue.Queue
+	logger    logger.Logger
 }
 
-func (d Dispatcher) Dispatch() {
-	sessionId := uuid.NewString()
+func (d Dispatcher) Dispatch(session libomni.Session) error {
 
-	session := libomni.Session{
-		ID: sessionId,
-	}
-
-	d.logger.Debug(session.ID, "reading first bytes")
+	d.logger.Info(session.ID, "reading first bytes")
 	rawBytes, err := d.read()
 	if err != nil {
-		d.logger.Debug(session.ID, "found an error", err)
-		return
+		d.logger.Error(session.ID, "found an error", err)
+		return err
 	}
 
-	d.logger.Debug(session.ID, "finding the provider")
+	d.logger.Info(session.ID, "finding the provider")
 	for n, p := range d.providers {
 		if p.Admit(session, rawBytes) {
-			d.logger.Debug(session.ID, "found", n, "as a provider")
+			d.logger.Info(session.ID, "found", n, "as a provider")
 			d.current = p
 			break
 		}
 	}
 
 	if d.current == nil {
-		d.logger.Debug(session.ID, "didnt find a provider")
-		return
+		d.logger.Error(session.ID, "didnt find a provider")
+		return err
 	}
 
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		d.logger.Debug(session.ID, "processing signals")
+		d.logger.Info(session.ID, "processing signals")
 		defer wg.Done()
 		for {
+			if d.state == connectionClosed {
+				d.logger.Error(session.ID, "connection was closed by the client")
+				d.logger.Error(session.ID, "commands processor is aborting")
+
+				break
+			}
+
 			if err := d.processSignals(session); err != nil {
-				d.logger.Debug(session.ID, "err found", err)
+				d.logger.Info(session.ID, "err found", err)
+				if err == io.EOF {
+					d.state = connectionClosed
+
+					d.logger.Error(session.ID, "connection was closed by the client")
+					d.logger.Error(session.ID, "signals processor is aborting")
+					break
+				}
 			}
 		}
 	}(&wg)
 
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		d.logger.Debug(session.ID, "processing commands")
+		d.logger.Info(session.ID, "processing commands")
 
 		defer wg.Done()
 		for {
+			if d.state == connectionClosed {
+				d.logger.Error(session.ID, "connection was closed by the client")
+				d.logger.Error(session.ID, "commands processor is aborting")
+
+				break
+			}
+
 			time.Sleep(5 * time.Second)
-			if err := d.processCommands(session); err != nil && err != ErrEmptyQueue {
-				d.logger.Debug(session.ID, "err found", err)
+			if err := d.processCommands(session); err != nil && err != queue.ErrEmpty {
+				d.logger.Error(session.ID, "err found", err)
+
+				if errors.Is(err, syscall.EPIPE) {
+					d.state = connectionClosed
+
+					d.logger.Error(session.ID, "connection was closed by the client")
+					d.logger.Error(session.ID, "commands processor is aborting")
+					break
+				}
 			}
 		}
 	}(&wg)
 
 	wg.Wait()
+
+	return nil
 }
 
 func (d Dispatcher) read() ([]byte, error) {
@@ -101,10 +125,6 @@ func (d Dispatcher) write(bytes []byte) (int, error) {
 func (d Dispatcher) processSignals(session libomni.Session) error {
 	inputBytes, err := bufio.NewReader(d.rw).ReadBytes('\n')
 	if err != nil {
-		if err == io.EOF {
-			return nil
-		}
-
 		return err
 	}
 
@@ -192,55 +212,11 @@ func authorize(session libomni.Session, provider libomni.Omni, d libomni.Device,
 	return rawBytes, nil
 }
 
-type Option func(*Dispatcher)
-
-type logger struct{}
-
-func (l logger) Debug(args ...interface{}) {
-	log.Println(args...)
-}
-
-func (l logger) Debugf(args ...interface{}) {
-	log.Println(args...)
-}
-
-func (l logger) Warn(args ...interface{}) {
-	log.Println(args...)
-}
-
-func (l logger) Warnf(args ...interface{}) {
-	log.Println(args...)
-}
-
-type queue struct{}
-
-func (q queue) Send(_ libomni.Session, data interface{}) error {
-	return nil
-}
-
-var ErrEmptyQueue = errors.New("empty queue")
-
-func (q queue) Get(session libomni.Session) (*libomni.EncodeInput, error) {
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	if cmd := r.Intn(3); cmd == 0 {
-		log.Println(session.ID, "Authorization command")
-		return &libomni.EncodeInput{AuthorizationResponse: &libomni.AuthorizationResponse{}}, nil
-	} else if cmd == 1 {
-		log.Println(session.ID, "Ignite command")
-		return &libomni.EncodeInput{Ignite: &libomni.Ignite{}}, nil
-	} else {
-		log.Println(session.ID, "Nothing to send")
-		return nil, ErrEmptyQueue
-	}
-}
-
 func New(rw io.ReadWriter, providers map[string]libomni.Omni) Dispatcher {
 	return Dispatcher{
 		rw:        rw,
 		providers: providers,
-		logger:    &logger{},
-		queue:     &queue{},
+		logger:    &stdlib.Logger{},
+		queue:     &memory.Queue{},
 	}
 }
