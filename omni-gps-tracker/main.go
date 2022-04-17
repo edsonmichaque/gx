@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/edsonmichaque/libomni"
-	"github.com/edsonmichaque/libomni/registry"
+	"github.com/edsonmichaque/libomni/providers"
 	"github.com/edsonmichaque/omni/internal/listener/dispatcher"
 	"github.com/google/uuid"
 )
@@ -47,7 +47,7 @@ func (s Server) ServeTCP() error {
 
 		log.Println(session.ID, "accepting a new request")
 
-		dispatcher := dispatcher.New(c, registry.TCPProviders())
+		dispatcher := dispatcher.New(c, providers.GetTCPProviders())
 
 		log.Println(session.ID, "dispatching a new request")
 
@@ -79,7 +79,7 @@ func main() {
 
 	srv := Server{
 		TCPServer: TCPServer{
-			Providers: registry.TCPProviders(),
+			Providers: providers.GetTCPProviders(),
 			Port:      args[1],
 		},
 	}
