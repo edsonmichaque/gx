@@ -7,8 +7,8 @@ import (
 )
 
 type Queue interface {
-	Send(libomni.Session, interface{}) error
-	Get(libomni.Session) (*libomni.EncodeInput, error)
+	Enqueue(libomni.Session, interface{}) error
+	Dequeue(libomni.Session) (*libomni.EncodeInput, error)
 }
 
 var (

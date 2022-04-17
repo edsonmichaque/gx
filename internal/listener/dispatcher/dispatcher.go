@@ -148,7 +148,7 @@ func (d Dispatcher) processSignals(session libomni.Session) error {
 	case signal.PositionUpdate != nil:
 
 		var rawBytes []byte
-		if err := d.queue.Send(session, signal.PositionUpdate); err != nil {
+		if err := d.queue.Enqueue(session, signal.PositionUpdate); err != nil {
 			rawBytes, err = d.current.Encode(session, libomni.EncodeInput{PositionUpdateResponse: &libomni.PositionUpdateResponse{}})
 			if err != nil {
 				return err
@@ -173,7 +173,7 @@ func (d Dispatcher) processSignals(session libomni.Session) error {
 }
 
 func (d Dispatcher) processCommands(session libomni.Session) error {
-	cmd, err := d.queue.Get(session)
+	cmd, err := d.queue.Dequeue(session)
 	if err != nil {
 		return err
 	}

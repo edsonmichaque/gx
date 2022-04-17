@@ -9,7 +9,7 @@ import (
 	"github.com/edsonmichaque/omni/internal/listener/queue"
 )
 
-func (q Queue) Get(session libomni.Session) (*libomni.EncodeInput, error) {
+func (q Queue) Dequeue(session libomni.Session) (*libomni.EncodeInput, error) {
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -27,6 +27,6 @@ func (q Queue) Get(session libomni.Session) (*libomni.EncodeInput, error) {
 
 type Queue struct{}
 
-func (q Queue) Send(_ libomni.Session, data interface{}) error {
+func (q Queue) Enqueue(_ libomni.Session, data interface{}) error {
 	return nil
 }
