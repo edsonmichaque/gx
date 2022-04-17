@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/edsonmichaque/omni/dispatcher"
+	"github.com/edsonmichaque/omni/internal/dispatcher"
 	"github.com/edsonmichaque/omni/libomni"
 	"github.com/edsonmichaque/omni/libomni/registry"
 )
